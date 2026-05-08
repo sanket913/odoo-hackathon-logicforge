@@ -4,7 +4,7 @@ Odoo x Parul University Hackathon 2026 Submission
 
 ## Team
 - Sanket Prajapati
-- Team Members...
+- Manav Joshi
 
 
 ## Problem Statement
