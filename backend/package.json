@@ -1,0 +1,45 @@
+{
+  "name": "routewise-backend",
+  "version": "1.0.0",
+  "description": "Production-ready REST API for RouteWise travel planning.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed",
+    "check": "node --check src/server.js"
+  },
+  "keywords": [
+    "routewise",
+    "express",
+    "postgresql",
+    "prisma"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.15.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.19.3",
+    "@sentry/node": "^10.52.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^6.19.3"
+  }
+}

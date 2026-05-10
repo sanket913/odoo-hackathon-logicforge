@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+frontend/.env.local
+node_modules/
+dist/
+build/
