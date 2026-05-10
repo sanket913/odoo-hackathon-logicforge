@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -45,7 +45,7 @@ model User {
   name         String
   email        String         @unique
   passwordHash String
-  avatarUrl    String?
+  avatarUrl    String?        @db.VarChar(2048)
   role         Role           @default(USER)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -68,10 +68,10 @@ model Trip {
   id                   String          @id @default(cuid())
   userId               String
   title                String
-  description          String?
+  description          String?         @db.Text
   startDate            DateTime
   endDate              DateTime
-  coverImageUrl        String?
+  coverImageUrl        String?         @db.VarChar(2048)
   status               TripStatus      @default(PLANNED)
   totalEstimatedBudget Decimal         @default(0) @db.Decimal(12, 2)
   isPublic             Boolean         @default(false)
@@ -109,7 +109,7 @@ model Activity {
   id              String    @id @default(cuid())
   stopId          String
   title           String
-  description     String?
+  description     String?   @db.Text
   category        String
   startTime       DateTime?
   durationMinutes Int?
@@ -154,7 +154,7 @@ model Note {
   tripId    String
   stopId    String?
   title     String?
-  content   String
+  content   String    @db.Text
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   trip      Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -171,7 +171,7 @@ model City {
   region     String
   costIndex  Float
   popularity Int
-  imageUrl   String?
+  imageUrl   String? @db.VarChar(2048)
 
   @@unique([name, country])
   @@index([country])
@@ -183,7 +183,7 @@ model ActivitySuggestion {
   cityName      String
   country       String
   title         String
-  description   String?
+  description   String?     @db.Text
   category      String
   estimatedCost Decimal     @default(0) @db.Decimal(12, 2)
   budgetLevel   BudgetLevel @default(MEDIUM)

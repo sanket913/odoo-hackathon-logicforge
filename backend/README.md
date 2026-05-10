@@ -1,14 +1,16 @@
 # RouteWise Backend
 
-Node.js, Express, PostgreSQL, and Prisma REST API for RouteWise, a personalized multi-city travel planning platform.
+Node.js, Express, MySQL, and Prisma REST API for RouteWise, a personalized multi-city travel planning platform.
 
 ## Setup
 
 1. `npm install`
 2. Create `.env` from `.env.example`
-3. `npx prisma migrate dev`
-4. `npx prisma db seed`
-5. `npm run dev`
+3. Create the local MySQL database: `CREATE DATABASE routewise;`
+4. Set `DATABASE_URL="mysql://root:YOUR_PASSWORD@localhost:3306/routewise"`
+5. `npx prisma migrate dev --name init_mysql`
+6. `npx prisma db seed`
+7. `npm run dev`
 
 API base URL: `http://localhost:5000/api/v1`
 
@@ -36,6 +38,30 @@ Optional integration variables:
 - `GEMINI_MODEL`
 
 AI endpoints call Gemini from the backend when `GEMINI_API_KEY` is configured. If the key is missing, the Gemini API fails, or Gemini returns unparseable text, the backend returns structured fallback JSON instead of crashing.
+
+## MySQL Setup
+
+Run these commands after MySQL 8 is installed and running:
+
+```sql
+CREATE DATABASE routewise;
+```
+
+Then update `backend/.env`:
+
+```env
+DATABASE_URL="mysql://root:YOUR_PASSWORD@localhost:3306/routewise"
+```
+
+Apply the Prisma schema and seed data:
+
+```bash
+npx prisma generate
+npx prisma validate
+npx prisma migrate dev --name init_mysql
+npx prisma db seed
+npm run dev
+```
 
 ## Endpoints
 
@@ -173,7 +199,7 @@ CORS is restricted to `CLIENT_URL`.
 
 ## Security Notes
 
-- PostgreSQL with Prisma ORM only. No MongoDB or Mongoose.
+- MySQL with Prisma ORM only. No MongoDB or Mongoose.
 - Environment variables are validated at startup.
 - Passwords are hashed with bcrypt.
 - JWT access tokens are short-lived.
@@ -194,16 +220,16 @@ npm run prisma:generate
 npm run check
 ```
 
-Run migrations and seed data after PostgreSQL is available:
+Run migrations and seed data after MySQL is available:
 
 ```bash
-npx prisma migrate dev
+npx prisma migrate dev --name init_mysql
 npx prisma db seed
 ```
 
 ## Manual End-to-End Checklist
 
-1. Start PostgreSQL and confirm the `routewise` database exists.
+1. Start MySQL and confirm the `routewise` database exists.
 2. Start the backend with `npm run dev` from `backend/`.
 3. Start the frontend with `npm run dev` from `frontend/`.
 4. Register a new user.
