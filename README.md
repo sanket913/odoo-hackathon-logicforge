@@ -22,6 +22,19 @@ RouteWise is an adaptive AI-assisted travel planning workspace that helps travel
 </p>
 
 ---
+## Team
+
+| Team | Members |
+| --- | --- |
+| LogicForge | Sanket Prajapati, Manav Joshi |
+
+Built for the Odoo x Parul University Hackathon 2026.
+
+---
+
+## Vision
+
+RouteWise transforms fragmented travel planning into an intelligent, organized, and adaptive travel experience.
 
 ## Product Snapshot
 
@@ -602,17 +615,5 @@ RouteWise is structured for expansion into a larger travel operating system:
 
 ---
 
-## Team
 
-| Team | Members |
-| --- | --- |
-| LogicForge | Sanket Prajapati, Manav Joshi |
-
-Built for the Odoo x Parul University Hackathon 2026.
-
----
-
-## Vision
-
-RouteWise transforms fragmented travel planning into an intelligent, organized, and adaptive travel experience.
 
