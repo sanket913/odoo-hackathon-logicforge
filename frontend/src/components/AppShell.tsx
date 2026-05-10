@@ -22,7 +22,7 @@ const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/trips", label: "My Trips", icon: MapPinned },
   { to: "/explore", label: "Explore", icon: Compass },
-  { to: "/assistant", label: "AI Assistant", icon: Sparkles },
+  { to: "/assistant", label: "AI Travel Assistant", icon: Sparkles },
   { to: "/profile", label: "Settings", icon: Settings },
 ] as const;
 
@@ -111,7 +111,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{user?.name || "Traveler"}</p>
               <p className="text-xs text-muted-foreground truncate">
-                {user?.email || "guest@traveloop.app"}
+                {user?.email || "traveler@routewise.app"}
               </p>
             </div>
           </div>

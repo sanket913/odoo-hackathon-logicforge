@@ -5,6 +5,7 @@ node_modules/
 backend/.env
 frontend/.env
 frontend/.env.local
+.mysql-data/
 dist/
 build/
 coverage/

@@ -18,8 +18,8 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { login } = useApp();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("demo@routewise.app");
-  const [password, setPassword] = useState("Password123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

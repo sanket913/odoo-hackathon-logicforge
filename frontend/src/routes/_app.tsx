@@ -13,5 +13,5 @@ function AppLayout() {
   );
 }
 
-// note: auth gating handled inline so guests still see a polished demo experience.
+// note: auth gating is handled inline for the workspace shell.
 export { redirect };

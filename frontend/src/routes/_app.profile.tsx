@@ -18,7 +18,7 @@ function ProfilePage() {
   const { user, updateProfile, logout } = useApp();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || "Traveler");
-  const [email, setEmail] = useState(user?.email || "demo@routewise.app");
+  const [email, setEmail] = useState(user?.email || "");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -91,7 +91,7 @@ function ProfilePage() {
           <Trash2 className="h-4 w-4" /> Danger zone
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sign out or remove your account. This is a demo — your data lives only in your browser.
+          Sign out of your account or permanently delete your RouteWise profile.
         </p>
         <div className="mt-4 flex gap-2">
           <Button

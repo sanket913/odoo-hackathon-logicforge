@@ -60,7 +60,7 @@ const compactTrip = (input) => {
       amount: asNumber(item.amount),
       currency: item.currency || 'USD'
     })),
-    notes: input.notes || ''
+    notes: input.notes || input.prompt || ''
   };
 };
 
@@ -99,7 +99,7 @@ ${JSON.stringify(schema, null, 2)}
 Use concrete, actionable travel advice. Mention overloaded days, city order, rest windows, transport, local area choices, and estimated savings when relevant.`;
 
 const callGeminiJson = async ({ task, input, schema, fallback, normalize }) => {
-  if (!genAI) return { ...fallback, ...providerStatus('GEMINI_API_KEY is not configured') };
+  if (!genAI) return { ...fallback, ...providerStatus('Live AI is not configured') };
 
   try {
     const model = genAI.getGenerativeModel({ model: env.GEMINI_MODEL });
@@ -109,15 +109,74 @@ const callGeminiJson = async ({ task, input, schema, fallback, normalize }) => {
     if (!parsed) {
       return {
         ...fallback,
-        ...providerStatus('Gemini returned text instead of parseable JSON'),
+        ...providerStatus('Live AI response needed formatting cleanup'),
         rawText: text.slice(0, 1000)
       };
     }
     return { ...normalize(parsed), ...providerStatus() };
   } catch (error) {
-    console.error('Gemini request failed. Returning structured fallback AI response.');
-    return { ...fallback, ...providerStatus('Gemini request failed') };
+    console.error('Live AI request failed. Returning structured fallback AI response.');
+    return { ...fallback, ...providerStatus('Live AI is temporarily unavailable') };
   }
+};
+
+const ask = (input) => {
+  const trip = compactTrip(input);
+  const prompt = String(input.prompt || input.notes || input.destination || '').trim();
+  const lower = prompt.toLowerCase();
+  const destinationHint =
+    trip.destination ||
+    (lower.includes('bali') && 'Bali') ||
+    (lower.includes('jaipur') && 'Jaipur') ||
+    (lower.includes('tokyo') && 'Tokyo') ||
+    'your destination';
+  const fallback = {
+    title: destinationHint === 'your destination' ? 'RouteWise travel guidance' : `${destinationHint} travel ideas`,
+    answer:
+      destinationHint === 'your destination'
+        ? 'Build the day around one anchor area, add one food stop nearby, and leave a flexible evening so the plan stays comfortable.'
+        : `For ${destinationHint}, cluster sights by neighborhood, start with one signature cultural stop, add a local food experience, and keep one slower block for transit or rest.`,
+    suggestions: [
+      `Choose one walkable base in ${destinationHint} to reduce local transport time.`,
+      'Plan no more than three timed activities in a day.',
+      'Add one flexible evening after a long transfer or early start.'
+    ],
+    estimatedBudgetTips: [
+      'Book intercity transfers early and compare train, bus, and shared car options.',
+      'Use markets, food streets, or casual local restaurants for one meal each day.',
+      'Stay near the old town or main transit area to cut daily ride costs.'
+    ],
+    bestFor: ['balanced planners', 'food-focused travelers', 'culture seekers'],
+    nextSteps: [
+      'Pick travel dates and a target budget.',
+      'Add the first stop and one anchor activity.',
+      'Run the stress meter once the day plan has three or more activities.'
+    ]
+  };
+
+  return callGeminiJson({
+    task: `Answer this free-form travel planning question directly: "${prompt}".`,
+    input: { ...input, notes: prompt },
+    fallback,
+    schema: {
+      title: 'string',
+      answer: 'string',
+      suggestions: ['string'],
+      estimatedBudgetTips: ['string'],
+      bestFor: ['string'],
+      nextSteps: ['string']
+    },
+    normalize: (parsed) => ({
+      title: String(parsed.title || fallback.title),
+      answer: String(parsed.answer || parsed.response || fallback.answer),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : fallback.suggestions,
+      estimatedBudgetTips: Array.isArray(parsed.estimatedBudgetTips)
+        ? parsed.estimatedBudgetTips
+        : fallback.estimatedBudgetTips,
+      bestFor: Array.isArray(parsed.bestFor) ? parsed.bestFor : fallback.bestFor,
+      nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps : fallback.nextSteps
+    })
+  });
 };
 
 const buildStress = (input) => {
@@ -332,6 +391,7 @@ const stressMeter = (input) => {
 };
 
 module.exports = {
+  ask,
   recommend,
   improveItinerary,
   optimizeBudget,

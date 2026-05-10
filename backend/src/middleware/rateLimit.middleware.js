@@ -1,4 +1,7 @@
 const rateLimit = require('express-rate-limit');
+const env = require('../config/env');
+
+const isDevelopment = env.NODE_ENV === 'development';
 
 const jsonError = (_req, res) =>
   res.status(429).json({
@@ -11,15 +14,16 @@ const jsonError = (_req, res) =>
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 300,
+  limit: isDevelopment ? 5000 : 300,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => isDevelopment && ['GET', 'OPTIONS'].includes(req.method) && ['/health', '/ready'].includes(req.path),
   handler: jsonError
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: isDevelopment ? 200 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   handler: jsonError

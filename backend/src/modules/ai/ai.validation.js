@@ -3,6 +3,7 @@ const { z } = require('zod');
 const aiRequestSchema = z.object({
   body: z.object({
     tripId: z.string().min(1).optional(),
+    prompt: z.string().trim().min(2).max(4000).optional(),
     destination: z.string().trim().min(2).optional(),
     preferences: z.array(z.string().trim().min(1)).max(20).optional(),
     budget: z.coerce.number().min(0).optional(),
@@ -11,8 +12,8 @@ const aiRequestSchema = z.object({
     notes: z.string().trim().max(4000).optional(),
     stops: z.array(z.unknown()).optional(),
     activities: z.array(z.unknown()).optional()
-  }).refine((data) => data.tripId || data.destination || data.notes, {
-    message: 'Provide tripId, destination, or notes'
+  }).refine((data) => data.tripId || data.prompt || data.destination || data.notes, {
+    message: 'Provide tripId, prompt, destination, or notes'
   })
 });
 

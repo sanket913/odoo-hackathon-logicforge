@@ -247,18 +247,16 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
 
   const budget = tripBudgetEstimate(trip);
   const checklistDone = trip.checklist.filter((c) => c.done).length;
-  const fallbackReason =
-    stress?.fallbackReason ||
-    summary?.fallbackReason ||
-    improvements?.fallbackReason ||
-    budgetAI?.fallbackReason;
+  const hasStops = trip.stops.length > 0;
+  const hasActivities = trip.stops.some((stop) => stop.activities.length > 0);
+  const hasBudgetSignals = hasStops || hasActivities;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
-        {(fallbackReason || aiError) && (
+        {aiError && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>{aiError || `Fallback AI active: ${fallbackReason}`}</span>
+            <span>{aiError}</span>
             <Button
               variant="outline"
               size="sm"
@@ -276,7 +274,7 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
           <div className="absolute -right-8 -top-8 bg-brand/20 h-32 w-32 rounded-full blur-3xl group-hover:bg-brand/30 transition-colors" />
           <div className="flex items-center gap-2 relative">
             <Sparkles className="h-5 w-5 text-brand" />
-            <p className="text-sm font-medium opacity-80">Route Intelligence</p>
+            <p className="text-sm font-medium opacity-80">Adaptive Route Intelligence</p>
           </div>
           <div className="relative">
             {isLoadingAI ? (
@@ -284,6 +282,11 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
                 <div className="h-6 bg-background/10 rounded w-3/4" />
                 <div className="h-6 bg-background/10 rounded w-1/2" />
               </div>
+            ) : !hasStops ? (
+              <h3 className="mt-3 font-display text-xl font-semibold leading-snug max-w-xl">
+                Add your first stop to unlock route quality, pacing checks, and city-order
+                suggestions.
+              </h3>
             ) : improvements?.pacingSuggestions[0] ? (
               <h3 className="mt-3 font-display text-xl font-semibold leading-snug max-w-xl">
                 {improvements.pacingSuggestions[0]}
@@ -296,7 +299,9 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
             {improvements && (
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <p className="rounded-xl bg-background/10 p-3 text-xs">
-                  Quality score: {improvements.routeQualityScore}/100
+                  {hasStops
+                    ? `Quality score: ${improvements.routeQualityScore}/100`
+                    : "Quality score: needs route data"}
                 </p>
                 <p className="rounded-xl bg-background/10 p-3 text-xs">
                   Route: {improvements.betterRouteOrder.join(" -> ") || "Add stops to analyze"}
@@ -307,7 +312,7 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
         </div>
 
         {/* AI Travel Recap */}
-        {summary && (
+        {summary && hasStops && (
           <div className="rounded-2xl bg-brand/5 border border-brand/20 p-6 shadow-soft relative overflow-hidden">
             <div className="absolute right-0 top-0 p-4 text-brand/20 opacity-10">
               <MapIcon className="h-24 w-24" />
@@ -340,7 +345,7 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
             Quick highlights
           </h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {trip.stops.slice(0, 4).map((s) => (
+            {(hasStops ? trip.stops.slice(0, 4) : []).map((s) => (
               <div key={s.id} className="rounded-xl border border-border/60 p-4">
                 <p className="font-medium">{s.city}</p>
                 <p className="text-xs text-muted-foreground">{s.country}</p>
@@ -350,6 +355,11 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
                 </p>
               </div>
             ))}
+            {!hasStops && (
+              <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground sm:col-span-2">
+                Add stops to turn this trip into a route with dates, activities, and AI highlights.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -361,7 +371,7 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
               Trip Stress Meter
             </p>
-            {stress && (
+            {stress && hasActivities && (
               <Badge
                 className={cn(
                   "rounded-full px-2 py-0",
@@ -380,6 +390,10 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
             <div className="mt-4 space-y-2 animate-pulse">
               <div className="h-8 bg-muted rounded w-1/3" />
               <div className="h-2 bg-muted rounded w-full" />
+            </div>
+          ) : !hasActivities ? (
+            <div className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+              Add stops and activities to calculate a real stress score.
             </div>
           ) : (
             <>
@@ -415,24 +429,33 @@ function Overview({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Budget Optimization
           </p>
-          <p className="mt-2 font-display text-3xl font-semibold">
-            ${Math.round(budgetAI?.possibleSavings || 0).toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            possible savings - {budgetAI?.budgetRiskLevel || "Moderate"} risk
-          </p>
-          <Progress
-            value={Math.min(
-              100,
-              ((budgetAI?.currentEstimatedCost || budget.total) / Math.max(1, trip.budgetTarget)) *
-                100,
-            )}
-            className="mt-3 h-2"
-          />
-          {budgetAI?.categorySuggestions[0] && (
-            <p className="mt-4 text-xs text-muted-foreground">
-              {budgetAI.categorySuggestions[0].suggestion}
-            </p>
+          {!hasBudgetSignals ? (
+            <div className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+              Add at least one stop before RouteWise estimates savings and budget risk.
+            </div>
+          ) : (
+            <>
+              <p className="mt-2 font-display text-3xl font-semibold">
+                ${Math.round(budgetAI?.possibleSavings || 0).toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                possible savings - {budgetAI?.budgetRiskLevel || "Moderate"} risk
+              </p>
+              <Progress
+                value={Math.min(
+                  100,
+                  ((budgetAI?.currentEstimatedCost || budget.total) /
+                    Math.max(1, trip.budgetTarget)) *
+                    100,
+                )}
+                className="mt-3 h-2"
+              />
+              {budgetAI?.categorySuggestions[0] && (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {budgetAI.categorySuggestions[0].suggestion}
+                </p>
+              )}
+            </>
           )}
         </div>
         <div className="rounded-2xl bg-card border border-border/60 p-6 shadow-soft">
@@ -1162,6 +1185,7 @@ function NotesTab({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
 function ShareTab({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
   const { shareTrip } = useApp();
   const [token, setToken] = useState(trip.shareToken);
+  const [sharing, setSharing] = useState(false);
   const url =
     typeof window !== "undefined" && token ? `${window.location.origin}/share/${token}` : "";
 
@@ -1199,17 +1223,21 @@ function ShareTab({ trip }: { trip: ReturnType<typeof useApp>["trips"][0] }) {
         ) : (
           <Button
             className="mt-5 rounded-full"
+            disabled={sharing}
             onClick={async () => {
+              setSharing(true);
               try {
                 const t = await shareTrip(trip.id);
                 setToken(t);
                 toast.success("Trip is now public");
               } catch (error) {
                 toast.error(error instanceof Error ? error.message : "Unable to share trip");
+              } finally {
+                setSharing(false);
               }
             }}
           >
-            Generate public link
+            {sharing ? "Generating..." : "Generate public link"}
           </Button>
         )}
 

@@ -13,7 +13,7 @@ const baseTrip = {
   description: z.string().trim().max(2000).nullable().optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  coverImageUrl: z.string().url().nullable().optional(),
+  coverImageUrl: z.string().trim().min(1).max(2000).nullable().optional(),
   status: statusSchema.optional(),
   totalEstimatedBudget: z.coerce.number().min(0).optional(),
   isPublic: z.boolean().optional()

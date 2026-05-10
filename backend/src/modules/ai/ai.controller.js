@@ -23,6 +23,7 @@ const withOptionalTripOwnership = (handler) => asyncHandler(async (req, res) => 
 });
 
 module.exports = {
+  ask: withOptionalTripOwnership(async (body) => ({ result: await service.ask(body) })),
   recommend: withOptionalTripOwnership(async (body) => ({ result: await service.recommend(body) })),
   improveItinerary: withOptionalTripOwnership(async (body) => ({ result: await service.improveItinerary(body) })),
   optimizeBudget: withOptionalTripOwnership(async (body) => ({ result: await service.optimizeBudget(body) })),

@@ -13,23 +13,38 @@ export const Route = createFileRoute("/")({
 const features = [
   {
     icon: Sparkles,
-    title: "Route Intelligence",
+    title: "Smart route planning",
     desc: "Analyze your city sequence, travel fatigue, and transport flow for a smoother journey.",
   },
   {
     icon: Wallet,
-    title: "Budget Precision",
+    title: "Budget-aware planning",
     desc: "Estimate realistic costs across transport, stays, and activities with currency support.",
   },
   {
     icon: Map,
-    title: "Stress-Free Planning",
+    title: "AI trip assistant",
     desc: "Monitor your trip stress levels based on travel density and city switching frequency.",
   },
   {
     icon: Share2,
-    title: "Public Itineraries",
+    title: "Shared itinerary",
     desc: "Share your beautiful travel summaries with the community. Let others learn from your story.",
+  },
+];
+
+const heroValueCards = [
+  {
+    icon: PlaneTakeoff,
+    title: "Smart route planning",
+    text: "Sequence cities around pace and distance.",
+  },
+  { icon: Sparkles, title: "AI trip assistant", text: "Ask practical travel questions any time." },
+  { icon: Share2, title: "Shared itinerary", text: "Publish polished plans with one link." },
+  {
+    icon: Wallet,
+    title: "Budget-aware planning",
+    text: "Keep cost decisions visible while planning.",
   },
 ];
 
@@ -63,7 +78,7 @@ function Landing() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="rounded-full px-6">
-                <Link to="/dashboard">View live demo</Link>
+                <Link to="/dashboard">Open workspace</Link>
               </Button>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
@@ -114,17 +129,39 @@ function Landing() {
                 </div>
               </div>
             </div>
-            <div className="absolute -top-6 -left-6 rounded-2xl bg-card border border-border/60 shadow-card p-4 hidden md:block">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-brand-gradient grid place-items-center text-brand-foreground">
-                  <PlaneTakeoff className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Estimated total</p>
-                  <p className="font-display font-semibold">$2,840</p>
-                </div>
+            <div className="absolute -top-6 -left-6 hidden max-w-[280px] rounded-2xl bg-card border border-border/60 shadow-card p-4 md:block">
+              <div className="grid gap-3">
+                {heroValueCards.slice(0, 2).map((item) => (
+                  <div key={item.title} className="flex items-start gap-3">
+                    <div className="h-9 w-9 shrink-0 rounded-full bg-brand-gradient grid place-items-center text-brand-foreground">
+                      <item.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.text}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2">
+            {heroValueCards.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl bg-card border border-border/60 p-4 shadow-soft"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft">
+                    <item.icon className="h-5 w-5 text-foreground" />
+                  </span>
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.text}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

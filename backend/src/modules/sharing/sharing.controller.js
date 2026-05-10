@@ -21,7 +21,7 @@ const shareTrip = asyncHandler(async (req, res) => {
   const updated = await prisma.trip.update({
     where: { id: trip.id },
     data: { isPublic: true, shareToken },
-    select: { id: true, isPublic: true, shareToken: true }
+    include: publicInclude
   });
   ApiResponse.success(res, { trip: updated, publicUrl: `/api/v1/public/itinerary/${updated.shareToken}` });
 });

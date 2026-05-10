@@ -7,6 +7,7 @@ const { aiRequestSchema } = require('./ai.validation');
 const router = express.Router();
 
 router.use(protect);
+router.post('/ai/ask', validate(aiRequestSchema), controller.ask);
 router.post('/ai/recommend', validate(aiRequestSchema), controller.recommend);
 router.post('/ai/improve-itinerary', validate(aiRequestSchema), controller.improveItinerary);
 router.post('/ai/optimize-budget', validate(aiRequestSchema), controller.optimizeBudget);

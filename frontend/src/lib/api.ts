@@ -22,7 +22,9 @@ export class ApiClientError extends Error {
 }
 
 export const BASE_URL =
-  env.NEXT_PUBLIC_API_BASE_URL || env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+  env.VITE_API_BASE_URL || env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+
+export const HEALTH_URL = BASE_URL.replace(/\/api\/v1\/?$/, "/health");
 
 let accessToken: string | null = null;
 
@@ -55,7 +57,23 @@ async function request<T>(
       : ({ success: true, data: {} as T } as const);
 
     if (!payload.success) {
-      throw new ApiClientError(payload.error.message, payload.error.code, response.status);
+      const details = "details" in payload.error ? payload.error.details : undefined;
+      const fieldErrors =
+        details &&
+        typeof details === "object" &&
+        "fieldErrors" in details &&
+        details.fieldErrors &&
+        typeof details.fieldErrors === "object"
+          ? Object.values(details.fieldErrors as Record<string, unknown>)
+              .flat()
+              .filter(Boolean)
+              .join(" ")
+          : "";
+      throw new ApiClientError(
+        fieldErrors || payload.error.message,
+        payload.error.code,
+        response.status,
+      );
     }
 
     if (!response.ok) {
@@ -70,11 +88,24 @@ async function request<T>(
   } catch (error) {
     if (error instanceof ApiClientError) throw error;
     throw new ApiClientError(
-      "RouteWise API is unavailable. Showing saved demo data.",
+      "Connection issue detected. Showing saved local data until RouteWise reconnects.",
       "NETWORK_ERROR",
       undefined,
       true,
     );
+  }
+}
+
+export async function checkApiHealth() {
+  try {
+    const response = await fetch(HEALTH_URL, {
+      method: "GET",
+      credentials: "include",
+    });
+    const payload = (await response.json()) as { success?: boolean };
+    return response.ok && payload.success === true;
+  } catch {
+    return false;
   }
 }
 
@@ -227,7 +258,21 @@ export type AIRecommendationResult = {
   }[];
 };
 
+export type AIAskResult = {
+  provider?: string;
+  model?: string | null;
+  liveIntegrationEnabled?: boolean;
+  fallbackReason?: string;
+  title: string;
+  answer: string;
+  suggestions: string[];
+  estimatedBudgetTips: string[];
+  bestFor: string[];
+  nextSteps: string[];
+};
+
 export const api = {
+  checkHealth: checkApiHealth,
   register: (data: { name: string; email: string; password: string }) =>
     request<AuthResponse>("/auth/register", { method: "POST", body: data, auth: false }),
   login: (data: { email: string; password: string }) =>
@@ -295,6 +340,8 @@ export const api = {
 
   recommendActivities: (data: JsonBody) =>
     request<{ result: AIRecommendationResult }>("/ai/recommend", { method: "POST", body: data }),
+  askAI: (data: JsonBody) =>
+    request<{ result: AIAskResult }>("/ai/ask", { method: "POST", body: data }),
   improveItinerary: (data: JsonBody) =>
     request<{ result: AIImprovementResult }>("/ai/improve-itinerary", {
       method: "POST",

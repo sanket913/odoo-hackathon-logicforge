@@ -75,6 +75,8 @@ const AppContext = createContext<AppState | null>(null);
 const id = () => Math.random().toString(36).slice(2, 10);
 const STORAGE_USER = "routewise.user";
 const STORAGE_TRIPS = "routewise.trips";
+const CONNECTION_ISSUE_MESSAGE =
+  "Connection issue detected. Showing saved local data until RouteWise reconnects.";
 
 const safeDate = (value: string | Date | null | undefined) => {
   if (!value) return new Date().toISOString().slice(0, 10);
@@ -187,10 +189,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const retrySync = useCallback(async () => {
-    if (!user) return;
     setIsSyncing(true);
     try {
-      await loadTripsFromApi();
+      const isHealthy = await api.checkHealth();
+      if (isHealthy) {
+        setApiError(null);
+        if (user) await loadTripsFromApi();
+      } else {
+        setApiError(CONNECTION_ISSUE_MESSAGE);
+      }
     } catch (error) {
       setApiError(error instanceof Error ? error.message : "Unable to sync trips.");
     } finally {
@@ -209,12 +216,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (storedUser) setUser(JSON.parse(storedUser));
           if (storedTrips) setTrips(JSON.parse(storedTrips));
         } catch {
-          // Keep bundled demo data if local storage is unavailable or malformed.
+          // Keep bundled local data if local storage is unavailable or malformed.
         }
       }
 
       setIsSyncing(true);
       try {
+        const isHealthy = await api.checkHealth();
+        if (!isHealthy) {
+          throw new ApiClientError(CONNECTION_ISSUE_MESSAGE, "NETWORK_ERROR", undefined, true);
+        }
+        if (cancelled) return;
+        setApiError(null);
         const refreshed = await api.refresh();
         if (cancelled) return;
         setAccessToken(refreshed.accessToken);
@@ -225,7 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadTripsFromApi();
       } catch (error) {
         if (!cancelled && isApiUnavailable(error)) {
-          setApiError(error instanceof Error ? error.message : "RouteWise API is unavailable.");
+          setApiError(error instanceof Error ? error.message : CONNECTION_ISSUE_MESSAGE);
+        } else if (!cancelled) {
+          const isHealthy = await api.checkHealth();
+          if (isHealthy) setApiError(null);
         }
       } finally {
         if (!cancelled) {
@@ -272,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setApiError(null);
         } catch (error) {
           if (!isApiUnavailable(error)) throw error;
-          setApiError(error instanceof Error ? error.message : "Using saved demo data.");
+          setApiError(error instanceof Error ? error.message : CONNECTION_ISSUE_MESSAGE);
           setUser({
             id: "user-1",
             name: email.split("@")[0].replace(/\b\w/g, (char) => char.toUpperCase()),
@@ -298,7 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setApiError(null);
         } catch (error) {
           if (!isApiUnavailable(error)) throw error;
-          setApiError(error instanceof Error ? error.message : "Using saved demo data.");
+          setApiError(error instanceof Error ? error.message : CONNECTION_ISSUE_MESSAGE);
           setUser({ id: "user-1", name, email });
         }
       },
@@ -634,7 +650,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const { trip } = await api.shareTrip(tripId);
           const mapped = mapBackendTrip(trip);
-          updateOne(tripId, { shareToken: mapped.shareToken });
+          replaceTrip(mapped);
           return mapped.shareToken || "";
         } catch (error) {
           if (!isApiUnavailable(error)) throw error;
